@@ -18,6 +18,6 @@ deploy:
     - vault-azure-sso_linux_amd64
     - vault-azure-sso_windows_amd64.exe
   on:
-    repo: username/reponame
+    repo: aarnaud/vault-azure-sso
     # Only build binaries for tagged commits
     tags: true
