@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sign in to Vault with Azure AD</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <style>
+        body {
+            background-color: #3C434D;
+            color: white;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+        }
+
+        .center-box {
+            width: 800px;
+            margin: 10% auto;
+        }
+
+        h1 {
+            font-size: 1.71rem;
+            font-weight: 700;
+            line-height: 1.125;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        #actions {
+            display: none;
+            text-align: center;
+        }
+
+        #actions > div {
+            padding-bottom: 20px;
+        }
+
+        #error {
+            display: none;
+            text-align: center;
+        }
+
+        #errorMessage {
+            margin: 30px;
+            text-align: center;
+            color: red;
+            font-weight: 400;
+        }
+
+        #vaultToken {
+            display: none;
+            text-align: center;
+        }
+
+        #vaultToken > span {
+            font-size: 1rem;
+            font-weight: 500;
+            display: block;
+        }
+
+        #vaultToken > div {
+            display: inline-flex;
+        }
+
+        #vaultTokenValue {
+            text-align: center;
+            height: 48px;
+            width: 290px;
+        }
+
+        .icon {
+            font-size: 1.7rem;
+            margin: 30px;
+        }
+
+        .icon.term span {
+            background-color: black;
+            color: white;
+            padding: 10px 15px;
+        }
+
+        .icon.web span {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+        }
+
+        .buttonAction {
+            min-width: 220px;
+        }
+
+        .button {
+            background-color: white;
+            border: none;
+            color: black;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .button {
+            -webkit-transition-duration: 0.4s; /* Safari */
+            transition-duration: 0.4s;
+        }
+
+        .button:hover {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+
+        button > span {
+            display: block;
+        }
+
+        /* Loader */
+        .lds-dual-ring {
+            display: block;
+            width: 64px;
+            height: 64px;
+            margin: 50px auto 0 auto;
+
+        }
+
+        .lds-dual-ring:after {
+            content: " ";
+            display: block;
+            width: 46px;
+            height: 46px;
+            margin: 1px;
+            border-radius: 50%;
+            border: 5px solid #fff;
+            border-color: #fff transparent #fff transparent;
+            animation: lds-dual-ring 1.2s linear infinite;
+        }
+
+        @keyframes lds-dual-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="center-box">
+    <h1>Sign in to Vault with Azure AD</h1>
+    <div id="loader" class="lds-dual-ring"></div>
+    <div id="actions">
+        <div>
+            Role requested: <input id="role" type="text" title="Vault role"/>
+        </div>
+        <button id="btnVaultCLI" class="button buttonAction">
+            <span class="icon term"><span> >_ </span></span>
+            Vault CLI
+        </button>
+        <button id="btnVaultUI" class="button buttonAction">
+            <span class="icon web"><span>https://</span></span>
+            Vault UI
+        </button>
+    </div>
+    <div id="error">
+        <div id="errorMessage"></div>
+        <button class="button" onclick="retry()">Retry</button>
+    </div>
+    <div id="vaultToken">
+        <span>Your token for vault is</span>
+        <div>
+            <input id="vaultTokenValue" type="text" readonly="true"/>
+            <button id="btnCopy" class="button buttonCopy" onclick="copy_to_clipboard()">&#x2398</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let VAULT_URL = '{{.VaultUrl}}';
+    let AUTH_CODE_URL = '{{.AuthCodeURL}}';
+    let ACCESS_TOKEN = '{{.AccessToken}}';
+
+    function loader_show() {
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('actions').style.display = 'none';
+    }
+
+    function loader_hide() {
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    function actions_show() {
+        document.getElementById('actions').style.display = 'block';
+    }
+
+    function display_error_msg(error) {
+        loader_hide();
+        document.getElementById('errorMessage').textContent = 'ERROR: ' + error;
+        document.getElementById('error').style.display = 'block';
+    }
+
+    function display_vault_token(vault_token) {
+        document.getElementById('vaultTokenValue').value = vault_token;
+        document.getElementById('vaultToken').style.display = 'block';
+
+    }
+
+    function copy_to_clipboard() {
+        var copyText = document.getElementById('vaultTokenValue');
+        copyText.select();
+        document.execCommand('copy');
+    }
+    
+    function retry() {
+        location.replace(window.location.pathname);
+    }
+    
+
+    function get_vault_token(jwt, role, wrap, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', VAULT_URL + '/v1/auth/jwt/login');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                let resp = JSON.parse(xhr.responseText);
+                if (resp.auth && resp.auth.client_token) {
+                    callback(resp.auth.client_token, null);
+                    return
+                }
+                if (resp.wrap_info && resp.wrap_info.token) {
+                    callback(resp.wrap_info.token, null);
+                    return
+                }
+            } else if (xhr.status !== 200) {
+                let resp = JSON.parse(xhr.responseText);
+                callback(null, resp.errors.join(' '));
+            }
+        };
+        if (wrap) {
+            xhr.setRequestHeader('X-Vault-Wrap-TTL', '1m')
+        }
+        xhr.send(JSON.stringify({
+            'role': role,
+            'jwt': jwt
+        }));
+    }
+
+    // After login on vault API for cli
+    function vault_cli_callback(vault_token, error) {
+        loader_hide();
+        if (error != null) {
+            display_error_msg(error);
+            return
+        }
+        display_vault_token(vault_token)
+    }
+    // After login on vault API for UI
+    function vault_ui_callback(vault_token, error) {
+        loader_hide();
+        if (error != null) {
+            display_error_msg(error);
+            return
+        }
+        location.replace(VAULT_URL + '/ui/vault/auth?wrapped_token=' + vault_token);
+    }
+
+
+    if (ACCESS_TOKEN === '') {
+        // No error and id_token missing, redirect to implicit oauth2
+        location.replace(AUTH_CODE_URL)
+    } else {
+        // id_token (JWT) is present, expose login choices
+        document.getElementById('btnVaultCLI').onclick = function () {
+            loader_show();
+            get_vault_token(ACCESS_TOKEN, document.getElementById('role').value, false, vault_cli_callback);
+        };
+        document.getElementById('btnVaultUI').onclick = function () {
+            loader_show();
+            get_vault_token(ACCESS_TOKEN, document.getElementById('role').value, true, vault_ui_callback);
+        };
+        loader_hide();
+        actions_show();
+    }
+
+</script>
+</body>
+</html>
+

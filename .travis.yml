@@ -1,0 +1,23 @@
+language: go
+go:
+ - "1.11"
+
+before_install:
+  - go get github.com/golang/dep/cmd/dep
+  - go get github.com/mitchellh/gox
+
+script:
+  - dep ensure
+  - gox -os="linux darwin windows" -arch="amd64"
+
+deploy:
+  provider: releases
+  skip_cleanup: true
+  file:
+    - vault-azure-sso_darwin_amd64
+    - vault-azure-sso_linux_amd64
+    - vault-azure-sso_windows_amd64.exe
+  on:
+    repo: username/reponame
+    # Only build binaries for tagged commits
+    tags: true
