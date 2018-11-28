@@ -101,8 +101,17 @@ func AuthCodeImplicitURL(c *oauth2.Config, nonce string) string {
 }
 
 func startServer() {
+	viper.SetConfigName("azure-sso")            // name of config file (without extension)
+	viper.AddConfigPath("/etc/vault/")          // path to look for the config file in
+	viper.AddConfigPath("/etc/vault/azure-sso") // path to look for the config file in
+	viper.AddConfigPath(".")
 
-	// EXPORT HM_LISTEN_PORT=8000
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {             // Handle errors reading the config file
+		log.Infoln(err)
+	}
+
+	// EXPORT VAULT_AZURE_SSO_PORT=8000
 	viper.SetEnvPrefix("VAULT_AZURE_SSO")
 	viper.AutomaticEnv()
 
