@@ -3,26 +3,22 @@ go:
 - '1.11'
 before_install:
 - go get github.com/golang/dep/cmd/dep
-- go get github.com/mitchellh/gox
+- go get github.com/gobuffalo/packr/packr
 - go get github.com/golangci/golangci-lint/cmd/golangci-lint
 script:
 - dep ensure
 - golangci-lint run
 - go test -v -race ./...
-- gox -os="linux darwin windows" -arch="amd64" -output="{{.Dir}}_{{.OS}}_{{.Arch}}"
-- for file in $(ls -1 vault-azure-sso_*); do md5sum $file > $file.md5; done
+- GOOS=linux GOARCH=amd64 packr build
+- md5sum vault-azure-sso > vault-azure-sso.md5
 deploy:
   provider: releases
   skip_cleanup: true
   api_key:
     secure: O2Y8sjj0yfHwtym2SpPzN+hMArYpJUdis6bEddYCVa+YhTkbMaVJSD4Z6/l9UD83WtuDQhQwBKvraRvcDGEAOP8XcS5Odp/xfOOJbWYZ8kXSNe0L/UEvO4jMgBewgFR4zUVbjpbEmW+NHF7sJJ74KHzIf4Ovmie9aLDVkfnjmQoO/PwjiBfYb+Wr85cw62v7jtsknr6svjyYLAx51OHy0sjH9//INEKhhKFhKcnWL2AWsofMUwS7a+d8OH0fIlBBySwb4xD/vZrpxWjVba/rtfMfGpr4+kZjIhwx2hR63kexLHc1O0b8IVtzGwU1W2QjXOJCCYZQMew4BShdrBqZHAo4WvnTxhwHnxZwbzmk44QICfoz/XAOs06IpOKghq3Sy7WTxgvup04OPpD0de8Z2ozu8u5gyGZY7qGRtmz9Dppbvv7dg8thLKzutj5o5d/RA6usmqXQtHX5yhIBi1d4L+UkwEwog8DhWVYrvgSB14tyxqIWO9/AsgTCUXnXBpi5UmyRwfLksmC02A2xRunYkqBBB7uHNdq2zvdIx8ztmEe4kEmHziAwTrkxxBLcWXnoiT6IuHmUMNaw0+HINSYdEadyuTB0x7X9myOyK+zIVMM31Lv7LNywqRilCUZF/LG38nsKdQBQQsFssLAXqbTUPCu1oDdApsK/fnDp8lTwXas=
   file:
-  - vault-azure-sso_darwin_amd64
-  - vault-azure-sso_darwin_amd64.md5
-  - vault-azure-sso_linux_amd64
-  - vault-azure-sso_linux_amd64.md5
-  - vault-azure-sso_windows_amd64.exe
-  - vault-azure-sso_windows_amd64.exe.md5
+  - vault-azure-sso
+  - vault-azure-sso.md5
   on:
     repo: aarnaud/vault-azure-sso
     # Only build binaries for tagged commits
