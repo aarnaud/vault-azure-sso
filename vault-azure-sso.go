@@ -137,10 +137,9 @@ func startServer() {
 
 	AzureEndpoint := microsoft.AzureADEndpoint(viper.GetString("tenant_id"))
 	oauthConfig := &oauth2.Config{
-		ClientID:     viper.GetString("client_id"),
-		ClientSecret: viper.GetString("client_secret"),
-		Scopes:       []string{"openid", "offline_access", "email", "profile"},
-		Endpoint:     AzureEndpoint,
+		ClientID: viper.GetString("client_id"),
+		Scopes:   []string{"openid", "offline_access", "email", "profile"},
+		Endpoint: AzureEndpoint,
 	}
 
 	oauthStateString := fmt.Sprintf("%d", rand.Int())
