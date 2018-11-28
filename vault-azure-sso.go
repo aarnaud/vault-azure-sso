@@ -128,7 +128,6 @@ func startServer() {
 
 	AzureEndpoint := microsoft.AzureADEndpoint(viper.GetString("tenant_id"))
 	oauthConfig := &oauth2.Config{
-		RedirectURL:  "http://127.0.0.1:8200",
 		ClientID:     viper.GetString("client_id"),
 		ClientSecret: viper.GetString("client_secret"),
 		Scopes:       []string{"openid", "offline_access", "email", "profile"},
@@ -139,11 +138,15 @@ func startServer() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		accessToken := r.FormValue("id_token")
+		errorCode := r.FormValue("error")
+		errorDescription := r.FormValue("error_description")
 
 		data := map[string]interface{}{
-			"VaultUrl":    viper.GetString("vault_url"),
-			"AuthCodeURL": AuthCodeImplicitURL(oauthConfig, oauthStateString),
-			"AccessToken": accessToken,
+			"VaultUrl":         viper.GetString("vault_url"),
+			"AuthCodeURL":      AuthCodeImplicitURL(oauthConfig, oauthStateString),
+			"AccessToken":      accessToken,
+			"ErrorCode":        errorCode,
+			"ErrorDescription": errorDescription,
 		}
 		//log.Debugf("Template Data: %+v", data)
 		err := tmpl.Execute(w, data)

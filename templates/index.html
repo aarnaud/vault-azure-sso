@@ -129,7 +129,7 @@
             height: 46px;
             margin: 1px;
             border-radius: 50%;
-            border: 5px solid #fff;
+            border: 5px solid;
             border-color: #fff transparent #fff transparent;
             animation: lds-dual-ring 1.2s linear infinite;
         }
@@ -170,7 +170,7 @@
     <div id="vaultToken">
         <span>Your token for vault is</span>
         <div>
-            <input id="vaultTokenValue" type="text" readonly="true"/>
+            <input id="vaultTokenValue" type="text" title="Vault Token" readonly=""/>
             <button id="btnCopy" class="button buttonCopy" onclick="copy_to_clipboard()">&#x2398</button>
         </div>
     </div>
@@ -180,6 +180,8 @@
     let VAULT_URL = '{{.VaultUrl}}';
     let AUTH_CODE_URL = '{{.AuthCodeURL}}';
     let ACCESS_TOKEN = '{{.AccessToken}}';
+    let ERROR_CODE = '{{ .ErrorCode }}';
+    let ERROR_DESCRIPTION = '{{ .ErrorCode }} : {{ .ErrorDescription }}';
 
     function loader_show() {
         document.getElementById('loader').style.display = 'block';
@@ -266,7 +268,9 @@
     }
 
 
-    if (ACCESS_TOKEN === '') {
+    if (ERROR_CODE !== '') {
+        display_error_msg(ERROR_DESCRIPTION)
+    } else if (ACCESS_TOKEN === '') {
         // No error and id_token missing, redirect to implicit oauth2
         location.replace(AUTH_CODE_URL)
     } else {
