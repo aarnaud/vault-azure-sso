@@ -37,23 +37,36 @@ func init() {
 	flags := cli.Flags()
 
 	flags.BoolP("verbose", "v", false, "Enable verbose")
-	viper.BindPFlag("verbose", flags.Lookup("verbose"))
+	if err := viper.BindPFlag("verbose", flags.Lookup("verbose")); err != nil {
+		log.Fatal(err)
+	}
 
 	flags.Int("port", 3000, "HTTP port")
-	viper.BindPFlag("port", flags.Lookup("port"))
+	if err := viper.BindPFlag("port", flags.Lookup("port")); err != nil {
+		log.Fatal(err)
+	}
 
 	flags.String("vault-url", "http://127.0.0.1:8200", "Vault URL")
-	viper.BindPFlag("vault_url", flags.Lookup("vault-url"))
+	if err := viper.BindPFlag("vault_url", flags.Lookup("vault-url")); err != nil {
+		log.Fatal(err)
+	}
 
 	flags.String("client-id", "", "Application ID in App registrations")
-	viper.BindPFlag("client_id", flags.Lookup("client-id"))
+	if err := viper.BindPFlag("client_id", flags.Lookup("client-id")); err != nil {
+		log.Fatal(err)
+	}
 
 	flags.String("tenant-id", "", "Directory ID in Azure AD Properties")
-	viper.BindPFlag("tenant_id", flags.Lookup("tenant-id"))
+	if err := viper.BindPFlag("tenant_id", flags.Lookup("tenant-id")); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
-	cli.Execute()
+	err := cli.Execute()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func logRequest(handler http.Handler) http.Handler {
@@ -105,6 +118,9 @@ func startServer() {
 	tpldir := packr.NewBox("./templates")
 
 	tplFile, err := tpldir.FindString("index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
 	tmpl, err := template.New("index").Parse(tplFile)
 	if err != nil {
 		log.Fatal(err)
@@ -130,7 +146,13 @@ func startServer() {
 			"AccessToken": accessToken,
 		}
 		//log.Debugf("Template Data: %+v", data)
-		tmpl.Execute(w, data)
+		err := tmpl.Execute(w, data)
+		if err != nil {
+			log.Fatal(err)
+		}
 	})
-	http.ListenAndServe(fmt.Sprintf(":%d", viper.GetInt("port")), logRequest(http.DefaultServeMux))
+	err = http.ListenAndServe(fmt.Sprintf(":%d", viper.GetInt("port")), logRequest(http.DefaultServeMux))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
