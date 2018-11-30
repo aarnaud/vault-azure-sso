@@ -60,6 +60,11 @@ func init() {
 	if err := viper.BindPFlag("tenant_id", flags.Lookup("tenant-id")); err != nil {
 		log.Fatal(err)
 	}
+
+	flags.String("default-role", "default", "Default role for vault login")
+	if err := viper.BindPFlag("default_role", flags.Lookup("default-role")); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
@@ -151,6 +156,7 @@ func startServer() {
 
 		data := map[string]interface{}{
 			"VaultUrl":         viper.GetString("vault_url"),
+			"VaultRole":        viper.GetString("default_role"),
 			"AuthCodeURL":      AuthCodeImplicitURL(oauthConfig, oauthStateString),
 			"AccessToken":      accessToken,
 			"ErrorCode":        errorCode,
