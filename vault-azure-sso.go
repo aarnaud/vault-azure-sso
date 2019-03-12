@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/gobuffalo/packr"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
@@ -16,6 +16,7 @@ import (
 	"strings"
 )
 
+var version string
 var cli = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		startServer()
@@ -27,7 +28,7 @@ var cliOptionVersion = &cobra.Command{
 	Short: "Print the version.",
 	Long:  "The version of this program",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Version 1.0.0")
+		fmt.Println(version)
 	},
 }
 
@@ -58,6 +59,11 @@ func init() {
 
 	flags.String("tenant-id", "", "Directory ID in Azure AD Properties")
 	if err := viper.BindPFlag("tenant_id", flags.Lookup("tenant-id")); err != nil {
+		log.Fatal(err)
+	}
+
+	flags.String("redirect-url", "", "Define a callback URL")
+	if err := viper.BindPFlag("redirect_url", flags.Lookup("client-id")); err != nil {
 		log.Fatal(err)
 	}
 
@@ -142,9 +148,10 @@ func startServer() {
 
 	AzureEndpoint := microsoft.AzureADEndpoint(viper.GetString("tenant_id"))
 	oauthConfig := &oauth2.Config{
-		ClientID: viper.GetString("client_id"),
-		Scopes:   []string{"openid", "offline_access", "email", "profile"},
-		Endpoint: AzureEndpoint,
+		ClientID:    viper.GetString("client_id"),
+		Scopes:      []string{"openid", "offline_access", "email", "profile"},
+		Endpoint:    AzureEndpoint,
+		RedirectURL: viper.GetString("redirect_url"),
 	}
 
 	oauthStateString := fmt.Sprintf("%d", rand.Int())

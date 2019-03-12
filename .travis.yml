@@ -1,15 +1,17 @@
 language: go
 go:
 - '1.11'
+env:
+  - GO111MODULE=on
 before_install:
-- go get github.com/golang/dep/cmd/dep
 - go get github.com/gobuffalo/packr/packr
 - go get github.com/golangci/golangci-lint/cmd/golangci-lint
 script:
-- dep ensure
 - golangci-lint run
+- go mod vendor
 - go test -v -race ./...
-- GOOS=linux GOARCH=amd64 packr build
+- export GIT_VERSION=$(git describe --tags --long --always)
+- GOOS=linux GOARCH=amd64 packr build -ldflags "-X main.version=${GIT_VERSION}"
 - md5sum vault-azure-sso > vault-azure-sso.md5
 deploy:
   provider: releases

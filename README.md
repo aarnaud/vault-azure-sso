@@ -16,6 +16,7 @@ Flags:
       --default-role string   Default role for vault login (default "default")
   -h, --help                  help for this command
       --port int              HTTP port (default 3000)
+      --redirect-url string   Define a callback URL
       --tenant-id string      Directory ID in Azure AD Properties
       --vault-url string      Vault URL (default "http://127.0.0.1:8200")
   -v, --verbose               Enable verbose
