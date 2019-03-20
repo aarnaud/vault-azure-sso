@@ -1,5 +1,13 @@
 # Vault SSO with Azure AD
 
+>  :warning:
+>
+>  vault-azure-sso is no longer maintained   
+>  Vault 1.1.0 or above can now handle the SSO process on CLI or UI  
+>  https://www.vaultproject.io/docs/auth/jwt.html#oidc-authentication  
+> 
+>  :warning:
+
 ## Usage
 
 ```text
